@@ -1,7 +1,7 @@
-import 'dart:developer';
+import 'dart:ui';
 
+import 'package:api_task_one/currency_model.dart';
 import 'package:api_task_one/home_page_controller.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -14,38 +14,57 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   HomePageController _controller = HomePageController();
-  var responseData = '';
-  String dataText = '';
-  void gettingData() async {
-    var responseData =
-        await Dio().get("https://api.vpay.smarttersstudio.in/v1/currency");
-    print(responseData.data["data"]);
-    dataText = responseData.data["data"].toString();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.getCurrencies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('API TASK ONE'),
-      ),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: () async {
-              gettingData();
-              _controller.isSelected.toggle();
-            },
-            child: Text('Click Me!'),
+        appBar: AppBar(
+          backgroundColor: Colors.yellow,
+          title: const Text(
+            'API TASK ONE',
+            style: TextStyle(color: Colors.black),
           ),
-          Card(
-            child: Obx((() {
-              return _controller.isSelected.isTrue ? Text(dataText) : Text('');
-            })),
-            color: Colors.amber,
-          ),
-        ],
-      ),
-    );
+          centerTitle: true,
+        ),
+        body: _controller.obx(
+          (currency) => _controller.state != null &&
+                  _controller.status.isSuccess
+              ? GridView.builder(
+                  itemCount: currency!.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2),
+                  itemBuilder: ((context, index) {
+                    return Container(
+                      margin: const EdgeInsets.all(8),
+                      child: CircleAvatar(
+                          backgroundColor: Colors.yellow,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                currency[index].symbol,
+                                style: const TextStyle(
+                                    fontSize: 60, fontWeight: FontWeight.bold),
+                              ),
+                              Text(currency[index].name)
+                            ],
+                          )),
+                    );
+                  }))
+              : const Center(
+                  child: CircularProgressIndicator(),
+                ),
+          onError: (err) {
+            return Center(
+              child: Text(err!),
+            );
+          },
+        ));
   }
 }
